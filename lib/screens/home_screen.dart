@@ -49,7 +49,7 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       body: Center(
-        child: Text('Welcome to the Home Screen'),
+        child: Text('Welcome to the HoMe Screen'),
       ),
     );
   }
