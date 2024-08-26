@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "195449166114",
+    "firebase_url": "https://socialmediaplatform-9c39a-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "socialmediaplatform-9c39a",
+    "storage_bucket": "socialmediaplatform-9c39a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:195449166114:android:4e4bcce70e13fcf88fad7b",
+        "android_client_info": {
+          "package_name": "com.example.socialmediaplatform"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9TebeJ4Vic4CfjB_9LQtYFaG30XMojMQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -3,6 +3,32 @@ allprojects {
         google()
         mavenCentral()
     }
+//    plugins {
+//        // ...
+//
+//        // Add the dependency for the Google services Gradle plugin
+//        id 'com.google.gms.google-services' version '4.4.2' apply false
+//
+//    }
+//    dependencies {
+//        classpath 'com.android.tools.build:gradle:7.6.3',
+//        classpath 'com.google.gms:google-services:4.4.2'
+//    }
+//    plugins{
+//        id 'com.google.gms.google-services' version '4.4.2' apply false
+//    }
+}
+
+buildscript {
+    ext.kotlin_version = '2.0.20'
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.google.gms:google-services:4.4.2'
+    }
 }
 
 rootProject.buildDir = "../build"
@@ -16,3 +42,5 @@ subprojects {
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
+//classpath 'com.google.gms:google-services:4.3.10' // Use the latest version
+

@@ -1,7 +1,63 @@
 import 'package:flutter/material.dart';
-import 'signup_screen.dart';  // Import the SignupScreen
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      final String username = _usernameController.text.trim();
+      final String password = _passwordController.text.trim();
+
+      // Look up user email based on username
+      final userSnapshot = await _firestore
+          .collection('users')
+          .where('username', isEqualTo: username)
+          .limit(1)
+          .get();
+
+      if (userSnapshot.docs.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Username not found.')),
+        );
+        return;
+      }
+
+      final userEmail = userSnapshot.docs.first['email'];
+      print(userEmail);
+      try {
+        // Sign in with the retrieved email
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: userEmail,
+          password: password,
+        );
+
+        // Handle successful login
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login successful!')),
+        );
+
+        // Navigate to the home screen or wherever needed
+        Navigator.pushReplacementNamed(context, '/home');
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed. Please check your username and password.')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -10,40 +66,59 @@ class LoginScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                controller: _usernameController,
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your username';
+                  }
+                  return null;
+                },
               ),
-            ),
-            SizedBox(height: 16),
-            TextField(
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your password';
+                  }
+                  return null;
+                },
               ),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Handle login logic
-              },
-              child: Text('Login'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SignupScreen()),
-                );
-              },
-              child: Text('Don\'t have an account? Sign Up'),
-            ),
-          ],
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _login, // Call the login function on button press
+                child: Text('Login'),
+              ),
+              SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("Don't have an account? "),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/signup');
+                    },
+                    child: Text('Sign Up'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
