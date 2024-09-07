@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'comment.dart';
 class Post {
   final String id;
   final String userId;
@@ -7,7 +7,7 @@ class Post {
   final String imageUrl;
   final DateTime timestamp;
   final List<String> likes;
-  final List<String> comments;
+  final List<Comment> comments;
 
   Post({
     required this.id,
@@ -41,7 +41,7 @@ class Post {
       imageUrl: data['imageUrl'] ?? '',
       timestamp: DateTime.parse(data['timestamp'] ?? DateTime.now().toIso8601String()),
       likes: List<String>.from(data['likes'] ?? []),
-      comments: List<String>.from(data['comments'] ?? []),
+      comments: List<Comment>.from(data['comments'] ?? []),
     );
   }
   Future<void> createPost(Post post) async {
