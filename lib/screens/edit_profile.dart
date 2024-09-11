@@ -120,6 +120,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               SizedBox(height: 16),
               TextFormField(
+                // initialValue: widget.initialUsername,
                 controller: _usernameController,
                 decoration: InputDecoration(labelText: 'Username'),
                 validator: (value) {
@@ -131,6 +132,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               SizedBox(height: 16),
               TextFormField(
+                // initialValue: widget.initialBio,
                 controller: _bioController,
                 decoration: InputDecoration(labelText: 'Bio'),
                 maxLines: 3,
@@ -143,6 +145,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               SizedBox(height: 16),
               TextFormField(
+                initialValue: widget.initialFirstName,
                 controller: _firstNameController,
                 decoration: InputDecoration(labelText: 'First Name'),
                 validator: (value) {
@@ -154,6 +157,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               SizedBox(height: 16),
               TextFormField(
+                initialValue: widget.initialLastName,
                 controller: _lastNameController,
                 decoration: InputDecoration(labelText: 'Last Name'),
                 validator: (value) {

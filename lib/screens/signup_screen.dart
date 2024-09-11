@@ -65,7 +65,7 @@ class _SignupScreenState extends State<SignupScreen> {
         );
 
         // Save the user to Firestore
-        await _firestore.collection('users').doc(userId).set(newUser.toMap());
+        await _firestore.collection('users').doc(username).set(newUser.toMap());
 
         // Show a success message
         ScaffoldMessenger.of(context).showSnackBar(

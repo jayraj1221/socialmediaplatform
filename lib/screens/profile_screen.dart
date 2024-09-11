@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:socialmediaplatform/screens/edit_profile.dart';
-
+import 'package:insta_image_viewer/insta_image_viewer.dart';
 class ProfileScreen extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -24,10 +24,9 @@ class ProfileScreen extends StatelessWidget {
           final profileImageUrl = userData['profileImageUrl'] ?? 'assets/images/profile.png';
           final firstName = userData['firstName'] ?? '';
           final lastName = userData['lastName'] ?? '';
-          final postCount = '0';
-          final followerCount =  '0';
-          final followingCount =  '0';
-          final posts =  [];
+          final postCount = '0'; // Placeholder for actual post count
+          final followerCount = '0'; // Placeholder for actual follower count
+          final followingCount = '0'; // Placeholder for actual following count
 
           return SingleChildScrollView(
             child: Column(
@@ -155,32 +154,49 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ),
                       SizedBox(height: 10),
-                      posts.isEmpty
-                          ? Center(
-                        child: Text(
-                          'No post from the user',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      )
-                          : GridView.builder(
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: posts.length,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 2,
-                          mainAxisSpacing: 2,
-                        ),
-                        itemBuilder: (context, index) {
-                          return Container(
-                            color: Colors.grey[300],
-                            child: Image.network(
-                              posts[index],
-                              fit: BoxFit.cover,
+                      // StreamBuilder to fetch posts from Firestore
+                      StreamBuilder<QuerySnapshot>(
+                        stream: _firestore
+                            .collection('posts')
+                            .where('userId', isEqualTo: _auth.currentUser?.uid)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return Center(child: CircularProgressIndicator());
+                          }
+
+                          final posts = snapshot.data!.docs;
+                          return posts.isEmpty
+                              ? Center(
+                            child: Text(
+                              'No post from the user',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.black,
+                              ),
                             ),
+                          )
+                              : GridView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: posts.length,
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 2,
+                              mainAxisSpacing: 2,
+                            ),
+                            itemBuilder: (context, index) {
+                              final post = posts[index].data() as Map<String, dynamic>;
+                              final imageUrl = post['imageUrl'] ?? '';
+
+                              return Container(
+                                color: Colors.grey[300],
+                                child: InstaImageViewer(
+                                    child:Image(image: Image.network(imageUrl).image
+                                    )
+                                )
+                              );
+                            },
                           );
                         },
                       ),
