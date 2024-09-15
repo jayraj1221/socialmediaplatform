@@ -19,8 +19,6 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       final String username = _usernameController.text.trim();
       final String password = _passwordController.text.trim();
-
-      // Look up user email based on username
       final userSnapshot = await _firestore
           .collection('users')
           .where('username', isEqualTo: username)
@@ -37,18 +35,14 @@ class _LoginScreenState extends State<LoginScreen> {
       final userEmail = userSnapshot.docs.first['email'];
       print(userEmail);
       try {
-        // Sign in with the retrieved email
         UserCredential userCredential = await _auth.signInWithEmailAndPassword(
           email: userEmail,
           password: password,
         );
-
-        // Handle successful login
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Login successful!')),
         );
 
-        // Navigate to the home screen or wherever needed
         Navigator.pushReplacementNamed(context, '/home');
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -101,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               SizedBox(height: 16),
               ElevatedButton(
-                onPressed: _login, // Call the login function on button press
+                onPressed: _login,
                 child: Text('Login'),
               ),
               SizedBox(height: 16),

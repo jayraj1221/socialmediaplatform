@@ -3,30 +3,55 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:socialmediaplatform/screens/edit_profile.dart';
 import 'package:insta_image_viewer/insta_image_viewer.dart';
-class ProfileScreen extends StatelessWidget {
+import 'package:socialmediaplatform/screens/user_posts_screen.dart';
+class ProfileScreen extends StatefulWidget {
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+class _ProfileScreenState extends State<ProfileScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.white,
       body: FutureBuilder<DocumentSnapshot>(
         future: _firestore.collection('users').doc(_auth.currentUser?.uid).get(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return Center(child: CircularProgressIndicator());
           }
-
+          Future<int> getPostCount() async {
+            final querySnapshot = await _firestore
+                .collection('posts')
+                .where('userId', isEqualTo: _auth.currentUser?.uid)
+                .get();
+            return querySnapshot.docs.length;
+          }
+          Future<int> getFollowerCount() async {
+            final querySnapshot = await _firestore
+                .collection('users')
+                .doc(_auth.currentUser?.uid)
+                .collection('followers')
+                .get();
+            return querySnapshot.docs.length;
+          }
+          Future<int> getFollowingCount() async {
+            final querySnapshot = await _firestore
+                .collection('users')
+                .doc(_auth.currentUser?.uid)
+                .collection('following')
+                .get();
+            return querySnapshot.docs.length;
+          }
           final userData = snapshot.data!;
           final username = userData['username'] ?? 'No Username';
           final bio = userData['bio'] ?? 'No bio available';
           final profileImageUrl = userData['profileImageUrl'] ?? 'assets/images/profile.png';
           final firstName = userData['firstName'] ?? '';
           final lastName = userData['lastName'] ?? '';
-          final postCount = '0'; // Placeholder for actual post count
-          final followerCount = '0'; // Placeholder for actual follower count
-          final followingCount = '0'; // Placeholder for actual following count
+           // Placeholder for actual following count
 
           return SingleChildScrollView(
             child: Column(
@@ -38,7 +63,7 @@ class ProfileScreen extends StatelessWidget {
                       height: 200,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.blueAccent, Colors.purpleAccent],
+                          colors: [Colors.white, Colors.black45],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -58,8 +83,11 @@ class ProfileScreen extends StatelessWidget {
                       top: 60,
                       right: 20,
                       child: IconButton(
-                        icon: Icon(Icons.settings, color: Colors.white),
-                        onPressed: () {},
+                        icon: Icon(Icons.power_settings_new_outlined, color: Colors.black),
+                        onPressed:() async  {
+                          // Call the logout method
+                          await logout(context);
+                    },
                       ),
                     ),
                   ],
@@ -69,10 +97,11 @@ class ProfileScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+
                       Text(
                         username,
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.black,
                         ),
@@ -89,9 +118,40 @@ class ProfileScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildStatColumn('Posts', postCount),
-                          _buildStatColumn('Followers', followerCount),
-                          _buildStatColumn('Following', followingCount),
+                          FutureBuilder<int>(
+                            future: getPostCount(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return _buildStatColumn('Posts', '0');
+                              } else if (snapshot.hasError) {
+                                return _buildStatColumn('Posts', '0');
+                              }
+                              return _buildStatColumn('Posts', (snapshot.data ?? 0).toString());
+                            },
+                          ),
+                          FutureBuilder<int>(
+                            future: getFollowerCount(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return _buildStatColumn('Followers', '0');
+                              } else if (snapshot.hasError) {
+                                return _buildStatColumn('Followers', '0');
+                              }
+                              return _buildStatColumn('Followers', (snapshot.data ?? 0).toString());
+                            },
+                          ),
+
+                          FutureBuilder<int>(
+                            future: getFollowingCount(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return _buildStatColumn('Following', '0');
+                              } else if (snapshot.hasError) {
+                                return _buildStatColumn('Following', '0');
+                              }
+                              return _buildStatColumn('Following', (snapshot.data ?? 0).toString());
+                            },
+                          ),
                         ],
                       ),
                       SizedBox(height: 20),
@@ -112,18 +172,21 @@ class ProfileScreen extends StatelessWidget {
                                       initialLastName: lastName,
                                     ),
                                   ),
-                                ).then((_) {
-                                  // Refresh the profile screen after editing
-                                  // You can use setState or another method to refresh
+                                ).then((value) {
+                                  if(value==true)
+                                    {
+                                      setState(() {});
+                                    }
                                 });
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blueAccent,
+                                backgroundColor: Colors.teal,
+                                foregroundColor: Colors.black,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
-                              child: Text('Edit Profile'),
+                              child: Text('Edit Profile',selectionColor: Colors.black,),
                             ),
                           ),
                           SizedBox(width: 10),
@@ -131,30 +194,46 @@ class ProfileScreen extends StatelessWidget {
                             child: OutlinedButton(
                               onPressed: () {},
                               style: OutlinedButton.styleFrom(
-                                side: BorderSide(color: Colors.blueAccent),
+                                side: BorderSide(color: Colors.teal),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                               child: Text(
                                 'Share Profile',
-                                style: TextStyle(color: Colors.blueAccent),
+                                style: TextStyle(color: Colors.black),
                               ),
                             ),
                           ),
                         ],
                       ),
                       SizedBox(height: 20),
-                      Text(
-                        'Posts',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Posts',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.view_headline),
+                            color: Colors.black,
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProfileScreenList(username:username),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                       SizedBox(height: 10),
-                      // StreamBuilder to fetch posts from Firestore
                       StreamBuilder<QuerySnapshot>(
                         stream: _firestore
                             .collection('posts')
@@ -209,6 +288,14 @@ class ProfileScreen extends StatelessWidget {
         },
       ),
     );
+  }
+  Future<void> logout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      Navigator.pushReplacementNamed(context,'/');
+    } catch (e) {
+      print('Error logging out: $e');
+    }
   }
 
   Column _buildStatColumn(String label, String count) {

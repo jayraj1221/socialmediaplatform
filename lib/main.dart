@@ -23,8 +23,8 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => LoginScreen(),
-        '/signup': (context) => SignupScreen(), // Add your SignupScreen route here
-        '/home': (context) => HomeScreen(), // Replace with your home screen route
+        '/signup': (context) => SignupScreen(),
+        '/home': (context) => HomeScreen(),
       },
     );
   }

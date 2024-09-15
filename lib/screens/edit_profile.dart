@@ -84,7 +84,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         SnackBar(content: Text('Profile updated successfully!')),
       );
 
-      Navigator.pop(context, true); // Return true to indicate that profile was updated
+      Navigator.pop(context, true);
     } catch (e) {
       print(e.toString());
       ScaffoldMessenger.of(context).showSnackBar(
@@ -98,7 +98,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Edit Profile'),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.teal,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -145,7 +145,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               SizedBox(height: 16),
               TextFormField(
-                initialValue: widget.initialFirstName,
+                // initialValue: widget.initialFirstName,
                 controller: _firstNameController,
                 decoration: InputDecoration(labelText: 'First Name'),
                 validator: (value) {
@@ -157,7 +157,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               SizedBox(height: 16),
               TextFormField(
-                initialValue: widget.initialLastName,
+                // initialValue: widget.initialLastName,
                 controller: _lastNameController,
                 decoration: InputDecoration(labelText: 'Last Name'),
                 validator: (value) {
@@ -170,9 +170,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _updateProfile,
-                child: Text('Save Changes'),
+
+                child: const Text('Save Changes',selectionColor: Colors.teal,),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
+                  backgroundColor: Colors.teal,
+                  foregroundColor: Colors.black
                 ),
               ),
             ],

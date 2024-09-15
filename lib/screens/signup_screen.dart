@@ -31,8 +31,6 @@ class _SignupScreenState extends State<SignupScreen> {
       final String username = _usernameController.text.trim();
       final String email = _emailController.text.trim();
       final String password = _passwordController.text.trim();
-
-      // Check if the username is unique
       bool isUnique = await _isUsernameUnique(username);
       if (!isUnique) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -42,7 +40,6 @@ class _SignupScreenState extends State<SignupScreen> {
       }
 
       try {
-        // Create a new user with email and password
         UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
           email: email,
           password: password,
@@ -50,7 +47,6 @@ class _SignupScreenState extends State<SignupScreen> {
 
         final String userId = userCredential.user!.uid;
 
-        // Create the User object
         user newUser = user(
           id: userId,
           username: username,
@@ -59,30 +55,25 @@ class _SignupScreenState extends State<SignupScreen> {
           bio: '',
           firstName: '',
           lastName: '',
-          password: password, // Storing password in plain text is not recommended
+          password: password,
           followers: [],
           following: [],
         );
 
-        // Save the user to Firestore
         await _firestore.collection('users').doc(username).set(newUser.toMap());
 
-        // Show a success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('User signed up successfully!')),
         );
 
-        // Clear the input fields
         _usernameController.clear();
         _emailController.clear();
         _passwordController.clear();
 
-        // Navigate to login or home screen if needed
         Navigator.pushReplacementNamed(context, '/login');
       } catch (e) {
-        // Handle signup errors
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Signup failed: ${e.toString()}')),
+          SnackBar(content: Text('Signup failed')),
         );
       }
     }
@@ -145,7 +136,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               SizedBox(height: 16),
               ElevatedButton(
-                onPressed: _signup, // Call the signup function on button press
+                onPressed: _signup,
                 child: Text('Sign Up'),
               ),
             ],

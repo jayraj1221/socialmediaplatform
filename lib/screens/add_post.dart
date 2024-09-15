@@ -17,13 +17,11 @@ class _AddPostPageState extends State<AddPostPage> {
   final picker = ImagePicker();
   bool _isLoading = false;
 
-  // Get the current user ID
   String? get _currentUserId {
     final User? user = FirebaseAuth.instance.currentUser;
     return user?.uid;
   }
 
-  // Pick image from gallery or camera
   Future<void> _pickImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
@@ -32,8 +30,6 @@ class _AddPostPageState extends State<AddPostPage> {
       });
     }
   }
-
-  // Function to upload image to Firebase Storage
   Future<String?> _uploadImage(File imageFile) async {
     try {
       String fileName = 'posts/${DateTime.now().millisecondsSinceEpoch}.jpg';
@@ -48,7 +44,6 @@ class _AddPostPageState extends State<AddPostPage> {
     }
   }
 
-  // Add post data to Firestore
   Future<void> _addPost() async {
     String title = _titleController.text.trim();
     String content = _contentController.text.trim();
@@ -59,7 +54,6 @@ class _AddPostPageState extends State<AddPostPage> {
       return;
     }
 
-    // Get current user ID
     final String? userId = _currentUserId;
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -73,26 +67,22 @@ class _AddPostPageState extends State<AddPostPage> {
     });
 
     try {
-      // Upload image
       String? imageUrl = await _uploadImage(_imageFile!);
 
-      // Create post object
       Map<String, dynamic> post = {
         'title': title,
         'content': content,
         'imageUrl': imageUrl,
         'createdAt': DateTime.now().toIso8601String(),
-        'userId': userId, // Set the current user ID
+        'userId': userId,
       };
 
-      // Add post to Firestore
       await FirebaseFirestore.instance.collection('posts').add(post);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Post added successfully')),
       );
 
-      // Clear fields
       _titleController.clear();
       _contentController.clear();
       setState(() {
@@ -113,21 +103,18 @@ class _AddPostPageState extends State<AddPostPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Add Post'),
-      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: Column(
           children: [
-            // Post title input
+
             TextField(
               controller: _titleController,
               decoration: InputDecoration(labelText: 'Post Title'),
             ),
             SizedBox(height: 16),
 
-            // Post content input
+
             TextField(
               controller: _contentController,
               decoration: InputDecoration(labelText: 'Post Content'),

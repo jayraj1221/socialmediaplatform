@@ -3,6 +3,7 @@ import 'login_screen.dart';
 import 'profile_screen.dart';
 import 'package:socialmediaplatform/screens/add_post.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:socialmediaplatform/screens/search_screen.dart';
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -25,25 +26,19 @@ class _HomeScreenState extends State<HomeScreen> {
     Icons.search,
     // Icons.favorite
   ];
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.teal,
         title: Row(
           children: [
-            Text("Demo"),
+            Text("ShareMe"),
             SizedBox(width: 8),
-            Text(
-              "DemoSub",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+
           ],
         ),
       ),
@@ -77,15 +72,11 @@ class HomePage extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.all(16),
       children: [
-        // Stories Section
-        // StoryWidget(imageUrl: 'https://picsum.photos/seed/878/600', label: "label")
         StoriesRow(),
         SizedBox(height: 16),
-        // Post Section
-        // CustomContainerWidget(),
         PostCard(),
         SizedBox(height: 16),
-        PostCard(), // Repeat PostCard for additional posts
+        PostCard(),
       ],
     );
   }
@@ -96,16 +87,6 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Text('Profile Page'),
-    );
-  }
-}
-class Search extends StatelessWidget {
-  const Search({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Text("HELLO"),
     );
   }
 }
@@ -160,7 +141,7 @@ class StoriesRow extends StatelessWidget {
             children: [
               StoryWidget(
                 imageUrl: 'https://picsum.photos/seed/878/600',
-                label: 'Hello World',
+                label: 'me',
               ),
               StoryWidget(
                 imageUrl: 'https://picsum.photos/seed/878/600',
