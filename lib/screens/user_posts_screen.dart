@@ -58,6 +58,7 @@ class ProfileScreenList extends StatelessWidget {
                 postedDate: dateFormated,
                 imageUrl: imageUrl,
                 description: description,
+                isEditable: true,
               );
             },
           );

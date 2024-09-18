@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
 import 'profile_screen.dart';
 import 'package:socialmediaplatform/screens/add_post.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:socialmediaplatform/screens/search_screen.dart';
+import 'package:socialmediaplatform/widgets/post_card.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -31,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white54,
       appBar: AppBar(
         backgroundColor: Colors.teal,
         title: Row(
@@ -70,200 +72,115 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: EdgeInsets.all(16),
       children: [
-        StoriesRow(),
         SizedBox(height: 16),
-        PostCard(),
-        SizedBox(height: 16),
-        PostCard(),
+        Postlist(),
       ],
     );
+
   }
 }
 
-class ProfilePage extends StatelessWidget {
+class Postlist extends StatefulWidget {
+  const Postlist({Key? key}) : super(key: key);
+
   @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text('Profile Page'),
-    );
-  }
+  State<Postlist> createState() => _PostlistState();
 }
 
-class StoryWidget extends StatelessWidget {
-  final String imageUrl;
-  final String label;
-
-  StoryWidget({required this.imageUrl, required this.label});
+class _PostlistState extends State<Postlist> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  List<String> followingUserIds = [];
+  bool isLoading = true;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(6),
-      child: Column(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-            ),
-          ),
-          SizedBox(height: 4), // Spacing between image and text
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 9,
-            ),
-          ),
-        ],
-      ),
-    );
+  void initState() {
+    super.initState();
+    _getFollowingUsers();
   }
-}
 
-class StoriesRow extends StatelessWidget {
+  // Fetching the list of users the current user is following
+  Future<void> _getFollowingUsers() async {
+    final String? userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      QuerySnapshot followingSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('following')
+          .get();
+
+      setState(() {
+        followingUserIds =
+            followingSnapshot.docs.map((doc) => doc.id).toList();
+        isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Flexible(
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              StoryWidget(
-                imageUrl: 'https://picsum.photos/seed/878/600',
-                label: 'me',
-              ),
-              StoryWidget(
-                imageUrl: 'https://picsum.photos/seed/878/600',
-                label: 'Story 2',
-              ),
-              StoryWidget(
-                imageUrl: 'https://picsum.photos/seed/878/600',
-                label: 'Story 3',
-              ),
-              StoryWidget(
-                imageUrl: 'https://picsum.photos/seed/878/600',
-                label: 'Story 4',
-              ),
-              StoryWidget(
-                imageUrl: 'https://picsum.photos/seed/878/600',
-                label: 'Story 5',
-              ),
-              // Add more StoryWidgets as needed
-            ],
-          ),
+    if (isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    if (followingUserIds.isEmpty) {
+      return Center(
+        child: Text(
+          'You are not following anyone',
+          style: TextStyle(fontSize: 16, color: Colors.black),
         ),
-      ),
+      );
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore
+          .collection('posts')
+          .where('userId', whereIn: followingUserIds) // Filter posts by the user's following list
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        final posts = snapshot.data!.docs;
+        return posts.isEmpty
+            ? Center(
+          child: Text(
+            'No posts available',
+            style: TextStyle(fontSize: 16, color: Colors.black),
+          ),
+        ) : ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: posts.length,
+            itemBuilder: (context, index) {
+              final postSnapShot = posts[index];
+              final post = postSnapShot.data() as Map<String, dynamic>;
+              final imageUrl = post['imageUrl'] ?? '';
+              final description = post['description'] ?? ''; // Use 'description' instead of 'title'
+              final postedDate = post['createdAt'] as String?;
+              final dateFormatted = postedDate != null
+                  ? _formatDate(postedDate)
+                  : 'Unknown Date';
+              final postid = postSnapShot.id;
+              final userName = post['userName'] ?? 'all';
+
+              return PostCard(
+                postId: postid,
+                userName: userName,
+                postedDate: dateFormatted,
+                imageUrl: imageUrl,
+                description: description,
+              );
+            },
+          );
+      },
     );
   }
-}
 
-class PostCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 4,
-              color: Colors.black.withOpacity(0.25),
-              offset: Offset(0, 2),
-              spreadRadius: 2,
-            ),
-          ],
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header: Profile Picture and User Info
-            Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 25,
-                    backgroundImage: NetworkImage(
-                      'https://picsum.photos/seed/119/600',
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'User Name',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Posted on 7th June',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Post Content: Image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.network(
-                'https://picsum.photos/seed/892/600',
-                width: double.infinity,
-                height: 400,
-                fit: BoxFit.contain,
-              ),
-            ),
-
-            // Post Actions: Like and Comment
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.favorite_border),
-                    color: Colors.black,
-                    iconSize: 32,
-                    onPressed: () {},
-                  ),
-                  SizedBox(width: 12),
-                  IconButton(
-                    icon: Icon(Icons.comment_rounded),
-                    color: Colors.black,
-                    iconSize: 32,
-                    onPressed: () {},
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  // Helper method to format the date (assumes createdAt is a timestamp string)
+  String _formatDate(String timestamp) {
+    final DateTime date = DateTime.parse(timestamp);
+    return '${date.day}/${date.month}/${date.year}';
   }
 }
-

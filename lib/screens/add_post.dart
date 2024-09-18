@@ -16,10 +16,34 @@ class _AddPostPageState extends State<AddPostPage> {
   File? _imageFile;
   final picker = ImagePicker();
   bool _isLoading = false;
-
+  String? userName;
   String? get _currentUserId {
     final User? user = FirebaseAuth.instance.currentUser;
+    _getCurrentUserName();
     return user?.uid;
+  }
+  Future<void> _getCurrentUserName() async {
+    userName = await getUserName(); // Wait for the getUserName() to complete
+    setState(() {}); // Update the UI after the userName is fetched
+  }
+  Future<String?> getUserName() async {
+    // Get the current user's ID
+    final String? userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId != null) {
+      // Fetch the user's document from Firestore
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+
+      // Retrieve the 'userName' field from the document
+      if (userDoc.exists) {
+        return userDoc.get('username') as String?;
+      }
+    }
+
+    return null;
   }
 
   Future<void> _pickImage() async {
@@ -75,6 +99,7 @@ class _AddPostPageState extends State<AddPostPage> {
         'imageUrl': imageUrl,
         'createdAt': DateTime.now().toIso8601String(),
         'userId': userId,
+        'userName': userName,
       };
 
       await FirebaseFirestore.instance.collection('posts').add(post);

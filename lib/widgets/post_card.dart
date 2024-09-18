@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:socialmediaplatform/screens/add_comment.dart';
+import 'package:socialmediaplatform/screens/edit_post.dart';
 class PostCard extends StatefulWidget {
   final String userName;
   final String postedDate;
   final String imageUrl;
   final String description;
-  final String postId; // Add a postId to identify the post in the database
-  final bool isLikedInitially; // To check if the post is already liked or not
+  final String postId;
+  final bool isLikedInitially;
+  final bool isEditable; // New attribute
+
   PostCard({
     required this.userName,
     required this.postedDate,
@@ -16,6 +19,7 @@ class PostCard extends StatefulWidget {
     required this.description,
     required this.postId,
     this.isLikedInitially = false,
+    this.isEditable = false, // Default to false
   });
 
   @override
@@ -30,6 +34,7 @@ class _PostCardState extends State<PostCard> {
     super.initState();
     _checkIfLiked();
   }
+
   Future<void> _checkIfLiked() async {
     final likesRef = FirebaseFirestore.instance
         .collection('posts')
@@ -43,7 +48,27 @@ class _PostCardState extends State<PostCard> {
       isLiked = doc.exists; // If the document exists, the post is liked
     });
   }
+
   // Function to toggle like status and update the database
+  Future<void> _deletePost() async {
+    try {
+      // Delete post from Firestore
+      final postRef = FirebaseFirestore.instance.collection('posts').doc(widget.postId);
+      await postRef.delete();
+
+      // Optionally show a success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Post deleted successfully!')),
+      );
+
+      // Optionally navigate back after deletion
+      Navigator.of(context).pop();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete the post: $e')),
+      );
+    }
+  }
   void toggleLike() {
     setState(() {
       isLiked = !isLiked;
@@ -54,17 +79,15 @@ class _PostCardState extends State<PostCard> {
 
     if (isLiked) {
       // Add a new document to the 'likes' sub-collection with the user's ID
-       likesRef.set({
-        'userId':FirebaseAuth.instance.currentUser?.uid,
+      likesRef.set({
+        'userId': FirebaseAuth.instance.currentUser?.uid,
         'timestamp': FieldValue.serverTimestamp(),
       });
     } else {
       // Remove the document from the 'likes' sub-collection
-       likesRef.delete();
+      likesRef.delete();
     }
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -100,26 +123,39 @@ class _PostCardState extends State<PostCard> {
                     ),
                   ),
                   SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.userName,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.userName,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        widget.postedDate,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
+                        SizedBox(height: 4),
+                        Text(
+                          widget.postedDate,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  if (widget.isEditable) // Conditionally show the three-dot icon
+                    IconButton(
+                      icon: Icon(Icons.more_vert),
+                      onPressed: () {
+                        // Handle edit or delete actions
+                        showModalBottomSheet(
+                          context: context,
+                          builder: (context) => _buildBottomSheet(),
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
@@ -181,6 +217,66 @@ class _PostCardState extends State<PostCard> {
           ],
         ),
       ),
+    );
+  }
+
+  // Function to build the bottom sheet for edit/delete options
+  Widget _buildBottomSheet() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ListTile(
+          leading: Icon(Icons.edit),
+          title: Text('Edit Post'),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EditPostScreen(
+                  postId: widget.postId,
+                  currentDescription: widget.description,
+                  currentImageUrl: widget.imageUrl,
+                ),
+              ),
+            );
+          },
+        ),
+        ListTile(
+          leading: Icon(Icons.delete),
+          title: Text('Delete Post'),
+          onTap: () {
+            // Handle deleting
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text('Delete Post'),
+                content: Text('Are you sure you want to delete this post?'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close the dialog
+                    },
+                    child: Text('Cancel'),
+                    style: ButtonStyle(
+                      foregroundColor:MaterialStateProperty.all<Color>(Colors.teal),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      Navigator.of(context).pop(); // Close the dialog
+                      await _deletePost(); // Call the delete function
+                    },
+                    child: Text('Delete'),
+                    style: ButtonStyle(
+                      foregroundColor: MaterialStateProperty.all<Color>(Colors.teal),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }
