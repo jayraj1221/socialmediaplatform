@@ -60,7 +60,7 @@ class _SignupScreenState extends State<SignupScreen> {
           following: [],
         );
 
-        await _firestore.collection('users').doc(username).set(newUser.toMap());
+        await _firestore.collection('users').doc(userId).set(newUser.toMap());
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('User signed up successfully!')),
@@ -72,6 +72,8 @@ class _SignupScreenState extends State<SignupScreen> {
 
         Navigator.pushReplacementNamed(context, '/login');
       } catch (e) {
+        print(e);
+        print("HELLO HERE");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Signup failed')),
         );

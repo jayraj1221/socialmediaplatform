@@ -157,7 +157,7 @@ class _PostlistState extends State<Postlist> {
               final postSnapShot = posts[index];
               final post = postSnapShot.data() as Map<String, dynamic>;
               final imageUrl = post['imageUrl'] ?? '';
-              final description = post['description'] ?? ''; // Use 'description' instead of 'title'
+              final description = post['title'] ?? '';
               final postedDate = post['createdAt'] as String?;
               final dateFormatted = postedDate != null
                   ? _formatDate(postedDate)

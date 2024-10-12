@@ -135,6 +135,7 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
                   ),
                 ),
                 IconButton(
+                  color: Colors.teal,
                   icon: Icon(Icons.send),
                   onPressed: _addComment, // Add comment to Firestore
                 ),

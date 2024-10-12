@@ -145,7 +145,7 @@ class _PostCardState extends State<PostCard> {
                       ],
                     ),
                   ),
-                  if (widget.isEditable) // Conditionally show the three-dot icon
+                  if (widget.isEditable)
                     IconButton(
                       icon: Icon(Icons.more_vert),
                       onPressed: () {

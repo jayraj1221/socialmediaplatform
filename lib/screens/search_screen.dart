@@ -170,16 +170,4 @@ class _SearchState extends State<Search> {
   }
 }
 
-// Placeholder for UserProfilePage
-class UserProfilePage extends StatelessWidget {
-  final String userId;
-  const UserProfilePage({required this.userId});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('User Profile')),
-      body: Center(child: Text('Profile of user ID: $userId')),
-    );
-  }
-}

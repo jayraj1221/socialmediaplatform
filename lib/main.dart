@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:socialmediaplatform/screens/login_screen.dart';
 import 'package:socialmediaplatform/screens/signup_screen.dart';
 import 'firebase_options.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options:
@@ -19,6 +20,7 @@ class MyApp extends StatelessWidget {
       title: 'Social Media App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        primaryColor: Colors.pink,
       ),
       initialRoute: '/',
       routes: {
