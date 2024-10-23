@@ -206,7 +206,7 @@ class _PostCardState extends State<PostCard> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AddCommentScreen(postId: widget.postId),
+                          builder: (context) => AddCommentScreen(postId: widget.postId,isOwnpost: widget.isEditable,),
                         ),
                       );
                     },

@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 
 class AddCommentScreen extends StatefulWidget {
   final String postId;
+  final bool isOwnpost;
 
-  AddCommentScreen({required this.postId});
+  AddCommentScreen({required this.postId, required this.isOwnpost});
 
   @override
   _AddCommentScreenState createState() => _AddCommentScreenState();
@@ -15,7 +16,8 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
   final TextEditingController _commentController = TextEditingController();
   User? currentUser;
   String? userName;
-  String userImageUrl='';
+  String userImageUrl = '';
+
   @override
   void initState() {
     super.initState();
@@ -23,12 +25,12 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
     _fetchUserName();
   }
 
-  // Method to get the current authenticated user
   void _getCurrentUser() {
     setState(() {
       currentUser = FirebaseAuth.instance.currentUser;
     });
   }
+
   Future<void> _fetchUserName() async {
     if (currentUser == null) return;
 
@@ -44,7 +46,7 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
       });
     }
   }
-  // Method to add a comment to Firestore
+
   Future<void> _addComment() async {
     if (_commentController.text.isEmpty || currentUser == null) return;
 
@@ -58,14 +60,58 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
       'userName': userName ?? 'here',
       'comment': _commentController.text,
       'timestamp': FieldValue.serverTimestamp(),
-      'userImageUrl':userImageUrl,
+      'userImageUrl': userImageUrl,
     });
 
-    // Clear the comment input field
     _commentController.clear();
   }
 
-  // Method to display the list of comments
+  // New method to show a confirmation dialog before deletion
+  Future<void> _showDeleteConfirmationDialog(String commentId) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // Prevent closing by tapping outside
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Comment'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Are you sure you want to delete this comment?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              style: ButtonStyle(foregroundColor:MaterialStateProperty.all<Color>(Colors.teal)),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+            TextButton(
+              child: Text('Delete'),
+              style: ButtonStyle(foregroundColor: MaterialStateProperty.all<Color>(Colors.teal)),
+              onPressed: () {
+                _deleteComment(commentId);
+                Navigator.of(context).pop(); // Close the dialog and delete
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteComment(String commentId) async {
+    final commentsRef = FirebaseFirestore.instance
+        .collection('posts')
+        .doc(widget.postId)
+        .collection('comments');
+
+    await commentsRef.doc(commentId).delete();
+  }
+
   Widget _buildCommentsList() {
     final commentsRef = FirebaseFirestore.instance
         .collection('posts')
@@ -86,11 +132,13 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
           shrinkWrap: true,
           itemCount: comments.length,
           itemBuilder: (context, index) {
-            final commentData = comments[index].data() as Map<String, dynamic>;
+            final commentDoc = comments[index];
+            final commentData = commentDoc.data() as Map<String, dynamic>;
             final commentText = commentData['comment'] ?? '';
-
             final userName = commentData['userName'] ?? 'Unknown';
+            final userId = commentData['userId']; // User ID of the comment
             final timestamp = commentData['timestamp']?.toDate().toString() ?? 'Unknown';
+            final commentId = commentDoc.id;
 
             return ListTile(
               leading: CircleAvatar(
@@ -104,7 +152,19 @@ class _AddCommentScreenState extends State<AddCommentScreen> {
               ),
               title: Text(userName),
               subtitle: Text(commentText),
-              trailing: Text(timestamp),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.isOwnpost || currentUser!.uid == userId) // Allow delete if own post or comment
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () {
+                        // Show confirmation dialog before deleting
+                        _showDeleteConfirmationDialog(commentId);
+                      },
+                    ),
+                ],
+              ),
             );
           },
         );
